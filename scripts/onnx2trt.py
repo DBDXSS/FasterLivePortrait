@@ -20,7 +20,6 @@ import pdb
 import sys
 import logging
 import argparse
-import platform
 
 import tensorrt as trt
 import ctypes
@@ -29,6 +28,7 @@ import numpy as np
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("EngineBuilder").setLevel(logging.INFO)
 log = logging.getLogger("EngineBuilder")
+import platform
 
 
 def load_plugins(logger: trt.Logger):
@@ -36,7 +36,9 @@ def load_plugins(logger: trt.Logger):
     if platform.system().lower() == 'linux':
         ctypes.CDLL("./checkpoints/liveportrait_onnx/libgrid_sample_3d_plugin.so", mode=ctypes.RTLD_GLOBAL)
     else:
-        ctypes.CDLL("./checkpoints/liveportrait_onnx/grid_sample_3d_plugin.dll", mode=ctypes.RTLD_GLOBAL, winmode=0)
+        ctypes.CDLL("./checkpoints/liveportrait_onnx/grid_sample_3d_plugin.dll", mode=ctypes.RTLD_GLOBAL,
+                    winmode=0)
+    # ctypes.CDLL("./checkpoints/liveportrait_onnx/grid_sample_3d_plugin.dll", mode=ctypes.RTLD_GLOBAL, winmode=0)
     # 初始化TensorRT的插件库
     trt.init_libnvinfer_plugins(logger, "")
 
@@ -58,18 +60,18 @@ class EngineBuilder:
 
         self.builder = trt.Builder(self.trt_logger)
         self.config = self.builder.create_builder_config()
-        self.config.max_workspace_size = 12 * (2 ** 30)  # 12 GB
+        # self.config.max_workspace_size = 12 * (2 ** 30)  # 12 GB
+        self.config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 1 << 30)  # 1 GB
 
         profile = self.builder.create_optimization_profile()
 
-        # for face_2dpose_106.onnx
-        # profile.set_shape("data", (1, 3, 192, 192), (1, 3, 192, 192), (1, 3, 192, 192))
-        # for retinaface_det.onnx
-        # profile.set_shape("input.1", (1, 3, 512, 512), (1, 3, 512, 512), (1, 3, 512, 512))
-
         self.config.add_optimization_profile(profile)
         # 严格类型约束
-        self.config.set_flag(trt.BuilderFlag.STRICT_TYPES)
+        
+        self.config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
+        self.config.set_flag(trt.BuilderFlag.DIRECT_IO)
+        self.config.set_flag(trt.BuilderFlag.REJECT_EMPTY_ALGORITHMS)
+        
 
         self.batch_size = None
         self.network = None
@@ -106,7 +108,7 @@ class EngineBuilder:
         for output in outputs:
             log.info("Output '{}' with shape {} and dtype {}".format(output.name, output.shape, output.dtype))
         # assert self.batch_size > 0
-        self.builder.max_batch_size = 1
+        # self.builder.max_batch_size = 1
 
     def create_engine(
             self,
@@ -128,10 +130,16 @@ class EngineBuilder:
                 log.warning("FP16 is not supported natively on this platform/device")
             else:
                 self.config.set_flag(trt.BuilderFlag.FP16)
-
-        with self.builder.build_engine(self.network, self.config) as engine, open(engine_path, "wb") as f:
+        engine_bytes = self.builder.build_serialized_network(self.network, self.config)
+        if engine_bytes is None:        
+            log.error("Failed to build the TensorRT engine!")
+            sys.exit(1)
+        with open(engine_path, "wb") as f:
             log.info("Serializing engine to file: {:}".format(engine_path))
-            f.write(engine.serialize())
+            f.write(engine_bytes)
+        # with self.builder.build_engine(self.network, self.config) as engine, open(engine_path, "wb") as f:
+        #     log.info("Serializing engine to file: {:}".format(engine_path))
+        #     f.write(engine.serialize())
 
 
 def main(args):
