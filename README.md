@@ -58,8 +58,7 @@ Create a new Python virtual environment and install the necessary Python package
   cd -
   ``` 
   ```shell
-  python run.py --src_image assets/examples/source/s39.jpg --dri_video assets/examples/driving/d14.mp4 --cfg configs/on
-nx_infer.yaml --paste_back --animal
+  python run.py --src_image assets/examples/source/s39.jpg --dri_video assets/examples/driving/d14.mp4 --cfg configs/onnx_infer.yaml --paste_back --animal
   ```
 
 ### TensorRT Inference
