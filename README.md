@@ -51,6 +51,17 @@ Create a new Python virtual environment and install the necessary Python package
   python run.py --src_image assets/examples/source/s10.jpg --dri_video assets/examples/driving/d14.mp4 --cfg configs/onnx_infer.yaml
   ```
 
+* For animal:
+  ```shell
+  cd src/models/XPose/models/UniPose/ops
+  python setup.py build install
+  cd -
+  ``` 
+  ```shell
+  python run.py --src_image assets/examples/source/s39.jpg --dri_video assets/examples/driving/d14.mp4 --cfg configs/on
+nx_infer.yaml --paste_back --animal
+  ```
+
 ### TensorRT Inference
 
 * (Ignored in Docker) Install TensorRT. Remember the installation path of [TensorRT](https://developer.nvidia.com/tensorrt).
@@ -68,14 +79,6 @@ Create a new Python virtual environment and install the necessary Python package
    --src_image assets/examples/source/s10.jpg \
    --dri_video assets/examples/driving/d14.mp4 \
    --cfg configs/trt_infer.yaml
-  ```
-* To run in real-time using a camera:
-  ```shell
-   python run.py \
-   --src_image assets/examples/source/s10.jpg \
-   --dri_video 0 \
-   --cfg configs/trt_infer.yaml \
-   --realtime
   ```
 
 ### Gradio App
