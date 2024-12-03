@@ -6,7 +6,6 @@
 
 * First, `apt-get update && apt-get install ffmpeg -y`
 * Run `pip install -r requirements.txt`
-* Then follow the tutorials below to install onnxruntime-gpu or TensorRT. Note that this has only been tested on Linux systems.
 
 ### Onnxruntime Inference
 
@@ -17,8 +16,11 @@
   ```
 * Follow these steps to install `onnxruntime-gpu` from source:
 
-  * `git clone https://github.com/microsoft/onnxruntime`
-  * `git checkout liqun/ImageDecoder-cuda`. Thanks to liqun for the grid_sample with cuda implementation!
+  ```shell
+  git clone https://github.com/microsoft/onnxruntime
+  git checkout liqun/ImageDecoder-cuda
+  ```
+
   * Run the following commands to compile, changing `cuda_version` and `CMAKE_CUDA_ARCHITECTURES` according to your machine ( tested on cuda-11.8 + cudnn-8.9.7.29 ) :
 
   ```shell
@@ -33,7 +35,7 @@
 * Test the pipeline using onnxruntime:
 
   ```shell
-  python run.py --src_image assets/examples/source/s10.jpg --dri_video assets/examples/driving/d14.mp4 --cfg configs/onnx_infer.yaml
+  python run.py --src_image assets/examples/source/s10.jpg --dri_video assets/examples/driving/d14.mp4 --cfg configs/onnx_infer.yaml --paste_back
   ```
 * For animal:
 
@@ -56,11 +58,12 @@
   pip install --upgrade pip wheel
   cd TensorRT-8.6.1.6/python
   pip install tensorrt-8.6.1-cp310-none-linux_x86_64.whl tensorrt_dispatch-8.6.1-cp310-none-linux_x86_64.whl tensorrt_lean-8.6.1-cp310-none-linux_x86_64.whl
+  cp -r /mnt/afs2/shisheng7/cuda/TensorRT-8.6.1.6/lib/* /usr/lib/x86_64-linux-gnu/
   ```
 * Install the grid_sample TensorRT plugin, as the model uses grid sample that requires 5D input, which is not supported by the native grid_sample operator.
   ```shell
   git clone https://github.com/SeanWangJS/grid-sample3d-trt-plugin
-  # Modify line 30 in `CMakeLists.txt` to: `set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_ARCHITECTURES "80;86")`
+  # Modify line 30 in CMakeLists.txt to: set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_ARCHITECTURES "80;86")
   export PATH=/usr/local/cuda/bin:$PATH
   export CPATH=/usr/local/cuda/include:$CPATH
   export TENSORRT_HOME=/mnt/afs2/shisheng7/cuda/TensorRT-8.6.1.6:$TENSORRT_HOME
