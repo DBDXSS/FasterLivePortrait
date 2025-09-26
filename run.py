@@ -137,3 +137,4 @@ if __name__ == '__main__':
     print(
         "inference median time: {} ms/frame, mean time: {} ms/frame".format(np.median(infer_times) * 1000,
                                                                             np.mean(infer_times) * 1000))
+
